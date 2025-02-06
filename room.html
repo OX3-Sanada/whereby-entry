@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whereby ルーム</title>
+</head>
+<body>
+    <h2>Wherebyに入室中...</h2>
+    <iframe id="wherebyFrame" width="100%" height="500px"></iframe>
+    <button onclick="sendSlackNotification()">ノックする</button>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userName = urlParams.get('name');
+        const deviceId = "iPad-001";  // 固定または動的に設定可能
+        const wherebyApiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmFwcGVhci5pbiIsImF1ZCI6Imh0dHBzOi8vYXBpLmFwcGVhci5pbi92MSIsImV4cCI6OTAwNzE5OTI1NDc0MDk5MSwiaWF0IjoxNzM4ODAyMzc2LCJvcmdhbml6YXRpb25JZCI6MzEwMzc2LCJqdGkiOiIwYTU1NmI2OS0wYmZlLTQ0MzQtYjYwYi1kNTEzNGE1OTU2YWYifQ.5yNmMu-DLCSEsYH6-BzZe5EruQdMs4oOwK3ImNIPSJM";  // WherebyのAPIキーを設定
+
+        function createWherebyRoom() {
+            fetch("https://api.whereby.dev/v1/meetings", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${wherebyApiKey}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    endDate: new Date(Date.now() + 60 * 60 * 1000).toISOString(),  // 1時間後に自動削除
+                    roomName: `meeting-${Date.now()}`,
+                    roomMode: "normal"
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.roomUrl) {
+                    document.getElementById('wherebyFrame').src = data.roomUrl;
+                    sessionStorage.setItem("wherebyRoomUrl", data.roomUrl); // 一時保存
+                } else {
+                    alert("Wherebyルームの作成に失敗しました。");
+                }
+            })
+            .catch(error => {
+                console.error("Whereby APIエラー:", error);
+                alert("Wherebyルームの作成に失敗しました。APIキーを確認してください。");
+            });
+        }
+
+        function sendSlackNotification() {
+            const roomUrl = sessionStorage.getItem("wherebyRoomUrl");
+            fetch("https://script.google.com/macros/s/AKfycbwDJ4o2Sy80LtxHZP0nTaNK1eziinFiMH5bJppU091wVjhK00bJgeqcXBld96jT0b8y/exec", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: userName,
+                    room: roomUrl,
+                    device: deviceId
+                })
+            })
+            .then(() => alert("Slackに通知を送りました！"))
+            .catch(error => console.error("Slack通知エラー:", error));
+        }
+
+        createWherebyRoom();
+    </script>
+</body>
+</html>
