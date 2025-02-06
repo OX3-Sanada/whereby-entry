@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whereby 入室ページ</title>
+</head>
+<body>
+    <h2>名前を入力してください</h2>
+    <input type="text" id="userName" placeholder="名前を入力">
+    <button onclick="enterRoom()">入室</button>
+
+    <script>
+        function enterRoom() {
+            const userName = document.getElementById('userName').value;
+            if (!userName) {
+                alert("名前を入力してください");
+                return;
+            }
+            // 入室ページへ移動（動的Wherebyルームを作成するページ）
+            window.location.href = `room.html?name=${encodeURIComponent(userName)}`;
+        }
+    </script>
+</body>
+</html>
